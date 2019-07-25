@@ -1,57 +1,19 @@
-	!!!Se recomanda ca fereastra de terminal sa aiba dimensiunile minime 80x27 pentru o vizualizare corecta a jocului.
+My implementation of the game 2048 written exclusively in C, from zero, and tested in Linux terminal. I used the ncurses library for the gui.
 
-//NAVIGAREA IN MENIU:
-	La deschiderea aplicatiei, se incepe primul while. La pornire, apare meniul cu cele cinci optiuni: New Game, Resume, Highscores, Switch user si Quit. Navigarea se face intr-un al doilea while, folosind sagetile sus/ jos, pana cand se apasa ENTER. Atunci, dispare fereastra de meniu si, in functie de optiunea aleasa:
+What is ncurses:
+"ncurses (new curses) is a programming library providing an application programming interface (API) that allows the programmer to write text-based user interfaces in a terminal-independent manner. It is a toolkit for developing "GUI-like" application software that runs under a terminal emulator." - Wikipedia
 
-- se termina primul while si, implicit, se iese din aplicatie (Quit)
-- sau se intra intr-un al treilea while, in care prima instructiune este un switch in functie de optiunea aleasa (choice)
+!!! It is recommended for the terminal window to have the dimensions at least 80x27 for a proper visualization.
 
-//TABLA DE JOC SI CELULELE
-	 Si in cazul 0 (New Game), si in cazul 1 (Resume), se deseneaza tabla de joc (board) si panoul (pannel) cu data, scorul si optiunile disponibile (functia newBoard). Apoi, se afiseaza numerele (printMatrix).
+Start menu navigation is done using up/ down arrows.
+Gameplay features:
+- displays current game board, score, date
+- use arrows to move, 'N' for a new game, 'Q' for quite
+- after 15s of inactivity the move which clears the boards the most is done automaticaly
+- 'U' for undo, can be pressed only once in a row
 
-	Pentru lucrul cu numerele care se formeaza in celule (2, 4... 2048), am considerat matricea cell[][], in care am retinut valoarea respectiva, sau 0, pentru celulele goale.
-
-	Tabla de joc am desenat-o folosind caracterele '-' si '|'. A trebuit doar sa acord atentie pozitiilor in care afisez numerele si, pentru aceasta, am realizat o corespondenta cu indicii matricei. De exemplu, elementului cell[4][6] ii corespunde numarul care apare in prima casuta, la coordonatele (4, 6) in fereastra cu tabla de joc (board). 
-Coordonatele la care se afiseaza numere sunt urmatoarele: i poate fi 4, 8, 12 sau 16; iar j poate fi 6, 14, 22 sau 30.
-
-//BONUS - CULORI
-	Am colorat fiecare numar diferit si am folosit functia logaritm in baza 2 din biblioteca <math.h> pentru a face corespondenta cu perechile de culori declarate anterior. De exemplu, numarului 32 (2^5) ii revine COLOR_PAIR(5). 
-	
-//BONUS - askUsername
-	Variabila gameOver are, la inceput, valoarea 2, ce semnifica faptul ca abia s-a intrat in aplicatie. Valoarea ei se schimba atunci cand utilizatorul incepe sa se joace propriu-zis. Daca gameOver are valoarea 2, la selectarea optiunii New Game, va aparea o fereastra ce va cere alegerea unui username, retinut in variabila user. 
-	In continuare, toate celulele devin 0 si se genereaza aleatoriu doua valori pe tabla de joc (genRandom).
-
-//BONUS - RESUME DUPA INCHIDEREA APLICATIEI
-	Daca se alege Resume imediat ce se deschide aplicatia (variabila gameOver are valoarea 2), utilizatorul va avea posibilitaea sa continue jocul inceput la sesiunea anterioara. Pentru aceasta, la inchiderea aplicatiei, daca jocul activ nu este castigat sau pierdut inca, in fisierul last_game.txt se retin, pe cate o linie: username-ul, scorul si elementele matricei. (Fisierul va fi suprascris de fiecare data.) La sesiunea de joc urmatoare, se extrag aceste date, ordinea si numarul lor fiind cunoscute.
-Posibilitati cand optiunea Resume nu este disponibila (resume = FALSE): cand utilizatorul a terminat un joc, s-a intors la meniu si doreste sa selecteze direct optiunea Resume.
-
-//JOCUL PROPRIU-ZIS
-	A doua instructiune este un al patrulea while, ce se termina cand utilizatorul apasa tasta Q (vrea sa se intoarca in meniu - backToMenu). Se afiseaza si scorul, apoi se apeleaza functia halfdelay(150), ce impune miscarea automata a celulelor dupa 15 secunde in care utilizatorul nu a apasat nicio tasta. Urmeaza un alt switch, in functie de tasta apasata:
-
-- 'N' pentru  New game, se reseteaza scorul si celulele de pe tabla de joc
-
-- 'Q' pentru iesirea din aplicatie
-
-- sagetile pentru a muta. Intai, se verifica daca mutarea este valida (tabla de joc nu trebuie sa ramana la fel)
-
-//ALGORITMUL UNEI MUTARI IN DIRECTIA NORD
-	O mutare presupune trei pasi.
-	Ia fiecare coloana pe rand si, in prima faza, se deplaseaza celulele cat mai aproape de marginea din nord, eliminand spatiile goale dintre ele. In a doua faza, se incepe din nord si, daca se gasesc doua celule egale una sub alta, cea de sus se dubleaza ca valoare, iar cea de jos devine zero. Al treilea pas este identic cu primul, deoarece pot sa fi aparut spatii goale intre celule intre timp.
-	Celelalte trei directii posibile au un algoritm analog.
-
-//MISCAREA AUTOMATA
-- -1 daca au trecut 15 secunde si utilizatorul a fost inactiv, se apeleaza functia bestMove, ce testeaza fiecare din cele 4 directii de mutare, numara cate celule sunt zero la sfarsitul fiecareia si o alege pe cea care elibereaza cele mai multe celule.
-
-//BONUS - UNDO
-- 'U' pentru a reveni la mutarea anterioara (functioneaza doar pentru o mutare in urma). Pentru acesta, am considerat alta matrice, lastMove si o alta variabila pentru scor, lastScore. Inainte de fiecare mutare, se retin matricea curenta si scorul curent in ele, pe scurt, pozitia precedenta a celulelor pe tabla si scorul anterior. La alegerea optiunii de Undo, se copiaza lastMove in cell si lastScore in score si se afiseaza.
-	
-	Dupa apsarea unei taste, se verifica daca jocul a fost castigat (s-a ajuns la numarul 2048) sau pierdut (nu exista nicio celula libera sau doua celule care se pot alipi), afisandu-se un mesaj potrivit petru fiecare caz.
-
-//BONUS - MENIU HIGHSCORES
-	Am creat trei fisiere in care se retin username-ul, scorul si data la care s-a facut intrarea: users.txt, scores.txt, dates.txt. Ele au mereu acelasi numar de linii. Aceste informatii se retin cand se termina jocul, sau daca utilizatorul doreste sa inceapa un joc nou, chiar daca jocul precedent nu s-a incheiat.
-	Pentru a lucra cu aceste informatii, am definit structura data si vectorul de structura v. La inceputul programului, i se aloca dinamic numarul de intrari egal cu numarul liniilor dintr-un fisier. Informatiile se retin in cele trei campuri: name, score si time. 
-	Daca a fost selectat optiunea Highscores din meniu, apare fereastra info, se calculeaza media scorurilor (avgScore), se ordoneaza descrescator vectorul, dupa score, iar daca doua scoruri sunt egale, alfabetic si se afiseaza primele 10 (sau mai putine, dupa caz).
-	Exista optiunea de a afla informatii despre un anumit utilizator, la apasarea tastei 'S'. Se tasteaza numele si vor aparea scorurile sale, precum si data cand a jucat.
-	
-//BONUS - OPTIUNE SWITCH USER
-	In orice moment al jocului, se poate schimba username-ul. Scorurile user-ului anterior vor fi salvate.
+App features:
+- keeps track of different users, their usernames and games history (score and the time it was played)
+- highscores menu
+- possibility to switch user at any time
+- possibility to resume the game started at the previous session provided that it wasn't finished
